@@ -9,7 +9,7 @@
 
   <groupId>org.jvnet.hudson.plugins</groupId>
   <artifactId>exclusive-execution</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
   <packaging>hpi</packaging>
   <name>Hudson Exclusive Execution Plugin</name>
   <description>This plugin allows for the execution of a job when no other jobs are running.</description>
@@ -51,6 +51,12 @@
             <type>stapler-jar</type>
         </dependency>
     </dependencies>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/exclusive-execution-0.1</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/exclusive-execution-0.1</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/tags/exclusive-execution-0.1</url>
+  </scm>
 </project>
 
 

@@ -35,6 +35,8 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
   @Override
   public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
     final PrintStream logger = listener.getLogger();
+    String nodeName = Computer.currentComputer().getDisplayName();
+    logger.println("[ExclusiveBuildWrapper] Executing on " + nodeName);
     logger.println("[ExclusiveBuildWrapper] Putting hudson in shutdown mode...");
     hudson.model.Hudson.getInstance().doQuietDown();
 
@@ -43,8 +45,8 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
     {
       ready = true;
       for(Computer computer: hudson.model.Hudson.getInstance().getComputers())
-        if (!"master".equals(computer.getDisplayName()) && !computer.isIdle()
-            || "master".equals(computer.getDisplayName()) && computer.countBusy() != 1)
+        if (!nodeName.equals(computer.getDisplayName()) && !computer.isIdle()
+            || nodeName.equals(computer.getDisplayName()) && computer.countBusy() != 1)
           ready = false;
       try {
         Thread.sleep(500);

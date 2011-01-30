@@ -15,6 +15,9 @@ import hudson.tasks.BuildWrapper;
 //import java.util.logging.Level;
 //import java.util.logging.Logger;
 import hudson.tasks.BuildWrapperDescriptor;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -38,7 +41,11 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
     String nodeName = Computer.currentComputer().getDisplayName();
     logger.println("[ExclusiveBuildWrapper] Executing on " + nodeName);
     logger.println("[ExclusiveBuildWrapper] Putting hudson in shutdown mode...");
-    hudson.model.Hudson.getInstance().doQuietDown();
+    try {
+      hudson.model.Hudson.getInstance().doQuietDown();
+    } catch (IOException ex) {
+      Logger.getLogger(ExclusiveBuildWrapper.class.getName()).log(Level.SEVERE, null, ex);
+    }
 
     boolean ready = false;
     while (!ready)

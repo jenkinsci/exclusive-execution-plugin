@@ -3,15 +3,15 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.388</version><!-- which version of Hudson is this plugin built against? -->
+    <version>1.394</version>
   </parent>
 
   <artifactId>exclusive-execution</artifactId>
   <version>0.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <name>Hudson Exclusive Execution Plugin</name>
+  <name>Jenkins Exclusive Execution Plugin</name>
   <description>This plugin allows for the execution of a job when no other jobs are running.</description>
-  <url>http://wiki.hudson-ci.org/display/HUDSON/Exclusive+Execution+Plugin</url>
+  <url>http://wiki.ijenkins-ci.org/display/JENKINS/Exclusive+Execution+Plugin</url>
   <licenses>
     <license>
       <name>MIT license</name>
@@ -21,8 +21,8 @@
 
   <distributionManagement>
     <repository>
-      <id>java.net-m2-repository</id>
-      <url>http://maven.hudson-labs.org:8081/content/repositories/releases/</url>
+      <id>maven.jenkins-ci.org</id>
+      <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
     </repository>
   </distributionManagement>
 
@@ -30,7 +30,7 @@
     <developer>
       <id>mambu</id>
       <name>Marco Ambu</name>
-      <email>mambu@dev.java.net</email>
+      <email>marco.ambu@gmail.com</email>
     </developer>
   </developers>
 
@@ -49,7 +49,7 @@
     </pluginRepository>
   </pluginRepositories>
 
-  <build>
+  <!--build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -72,12 +72,12 @@
         <version>1.9</version>
       </extension>
     </extensions>
-  </build>
+  </build-->
 
   <scm>
-    <connection>scm:git:git://github.com/hudson/exclusive-execution-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:hudson/exclusive-execution-plugin.git</developerConnection>
-    <url>http://github.com/hudson/exclusive-execution-plugin</url>
+    <connection>scm:git:git://github.com/jenkinsci/exclusive-execution-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/exclusive-execution-plugin.git</developerConnection>
+    <url>http://github.com/jenkinsci/exclusive-execution-plugin</url>
   </scm>
 </project>
 

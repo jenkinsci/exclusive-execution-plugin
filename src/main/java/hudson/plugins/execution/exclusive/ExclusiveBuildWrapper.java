@@ -40,7 +40,7 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
     final PrintStream logger = listener.getLogger();
     String nodeName = Computer.currentComputer().getDisplayName();
     logger.println("[ExclusiveBuildWrapper] Executing on " + nodeName);
-    logger.println("[ExclusiveBuildWrapper] Putting hudson in shutdown mode...");
+    logger.println("[ExclusiveBuildWrapper] Putting Jenkins in shutdown mode...");
     try {
       hudson.model.Hudson.getInstance().doQuietDown();
     } catch (IOException ex) {
@@ -75,7 +75,7 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
      @Override
      public boolean 	tearDown(AbstractBuild build, BuildListener listener) {
        final PrintStream logger = listener.getLogger();
-       logger.println("[ExclusiveBuildWrapper] Canceling hudson shutdown mode...");
+       logger.println("[ExclusiveBuildWrapper] Canceling Jenkins shutdown mode...");
        hudson.model.Hudson.getInstance().doCancelQuietDown();
        return true;
      }

@@ -65,6 +65,7 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
         } catch (IOException e) {
             DebugHelper.fatalError(listener, Messages.ExclusiveBuildWrapper_errorQuietMode() + 
                                                                                           e.getMessage());
+            e.printStackTrace(listener.getLogger());
         }
 
         while (areComputersIdle(nodeName, Jenkins.getInstance().getComputers()) == false) {

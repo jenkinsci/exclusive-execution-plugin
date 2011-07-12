@@ -1,6 +1,25 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * The MIT License
+ * 
+ * Copyright (c) 2011, Sun Microsystems, Inc., marco.ambu Sam Tavakoli
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 package hudson.plugins.execution.exclusive;
@@ -11,77 +30,72 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.plugins.execution.exclusive.util.DebugHelper;
 import hudson.tasks.BuildWrapper;
-//import java.util.logging.Level;
-//import java.util.logging.Logger;
 import hudson.tasks.BuildWrapperDescriptor;
+
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-
-//import hudson.plugins.execution.exclusive.Messages;
-import java.io.PrintStream;
 
 /**
  *
  * @author marco.ambu
+ * @author Sam Tavakoli
  */
 public class ExclusiveBuildWrapper extends BuildWrapper {
-  
-  @DataBoundConstructor
-  public ExclusiveBuildWrapper(/*boolean enabled*/) {
-    super();
-  }
 
-  @Override
-  public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) {
-    final PrintStream logger = listener.getLogger();
-    String nodeName = Computer.currentComputer().getDisplayName();
-    logger.println("[ExclusiveBuildWrapper] Executing on " + nodeName);
-    logger.println("[ExclusiveBuildWrapper] Putting Jenkins in shutdown mode...");
-    try {
-      hudson.model.Hudson.getInstance().doQuietDown();
-    } catch (IOException ex) {
-      Logger.getLogger(ExclusiveBuildWrapper.class.getName()).log(Level.SEVERE, null, ex);
+    @DataBoundConstructor
+    public ExclusiveBuildWrapper(boolean enabled) {
+        super();
     }
 
-    boolean ready = false;
-    while (!ready)
-    {
-      ready = true;
-      for(Computer computer: hudson.model.Hudson.getInstance().getComputers())
-        if (!nodeName.equals(computer.getDisplayName()) && !computer.isIdle()
-            || nodeName.equals(computer.getDisplayName()) && computer.countBusy() != 1)
-          ready = false;
-      try {
-        Thread.sleep(500);
-      } catch (InterruptedException ex) {
-      }
+    @Override
+    public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) 
+                                                                              throws InterruptedException{
+        String nodeName = Computer.currentComputer().getDisplayName();
+        
+        DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_executingOn() + nodeName);
+        DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_shutdownMessage());
+        
+        try {
+            Jenkins.getInstance().doQuietDown();
+        } catch (IOException e) {
+            DebugHelper.fatalError(listener, Messages.ExclusiveBuildWrapper_errorQuietMode() + 
+                                                                                          e.getMessage());
+        }
+
+        while (areComputersIdle(nodeName, Jenkins.getInstance().getComputers()) == false) {
+            Thread.sleep(500);
+        }
+        
+        DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_onlyJobRunning());
+        return new ExclusiveEnvironment(listener);
     }
-    logger.println("[ExclusiveBuildWrapper] Only this job is running; starting execution...");
-    return new ExclusiveEnvironment(listener);
-  }
-
-  class ExclusiveEnvironment extends Environment {
-
-    private BuildListener listener;
-
-    public ExclusiveEnvironment(BuildListener listener) {
-      this.listener = listener;
+    
+    /**
+     * @param nodeName the name of the node where this job is running from
+     * @param computers all computers who has executors available
+     * @return true if this job is the only one being executed on this node and all other nodes
+     *              are idle. false otherwise
+     */
+    private boolean areComputersIdle(String nodeName, Computer[] computers){
+        for (Computer computer : computers) {
+            //any other computer than the one the job is executed on should be idle
+            if (computer.getDisplayName().equals(nodeName) == false && computer.isIdle() == false) {
+                return false;
+            }
+            //check if this job is the only one being running on execution computer
+            if (computer.getDisplayName().equals(nodeName) == true && computer.countBusy() != 1) {
+                return false;
+            }
+        }
+        return true;
     }
 
-     @Override
-     public boolean 	tearDown(AbstractBuild build, BuildListener listener) {
-       final PrintStream logger = listener.getLogger();
-       logger.println("[ExclusiveBuildWrapper] Canceling Jenkins shutdown mode...");
-       hudson.model.Hudson.getInstance().doCancelQuietDown();
-       return true;
-     }
-  }
-
-  /**
+    /**
      * Descriptor for {@link ExclusiveBuildWrapper}. Used as a singleton.
      * The class is marked as public so that it can be accessed from views.
      */
@@ -96,6 +110,25 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
         public boolean isApplicable(AbstractProject item) {
             return true;
         }
+    }
+    
+    /**
+     * handles the post-build tasks such as canceling the quiet down sequencing 
+     * 
+     */
+    private class ExclusiveEnvironment extends Environment {
+        private BuildListener listener;
 
+        public ExclusiveEnvironment(BuildListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public boolean tearDown(AbstractBuild build, BuildListener listener) {
+            DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_cancelShutDownMode());
+            Jenkins.getInstance().doCancelQuietDown();
+            
+            return true;
+        }
     }
 }

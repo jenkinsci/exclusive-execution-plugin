@@ -1,4 +1,4 @@
-Allows a job to be executed when no other jobs are running
+Allows a job to be executed when no other jobs are allowed to run
 
 The pre-job steps are:
 
@@ -7,6 +7,9 @@ The pre-job steps are:
 
 The post-job steps are:
 1. Inactivates jenkins shutdown mode
+
+Combining this plugin with for instance scheduled build will pause the build queue and let executing jobs
+finish before invoking this job. When this job is done, it unpauses the build queue.
 
 
 Plugin is created by Marco Ambu but almost completely rewritten by Sam Tavakoli.

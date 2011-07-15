@@ -45,16 +45,28 @@
     <url>http://github.com/jenkinsci/exclusive-execution-plugin</url>
   </scm>
 
+  <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
   <repositories>
-  <repository>
+    <repository>
       <id>m.g.o-public</id>
       <url>http://maven.glassfish.org/content/groups/public/</url>
     </repository>
-      <repository>
-          <id>jenkins-ci</id>
-          <url>http://maven.jenkins-ci.org/content/repositories/releases</url>
-      </repository>
+    <repository>
+      <id>m.j-c.o-artifacts</id>
+      <url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+    </repository>
   </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>m.g.o-public</id>
+      <url>http://maven.glassfish.org/content/groups/public/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>m.j-c.o-artifacts</id>
+      <url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
+    </pluginRepository>
+  </pluginRepositories>
 
 </project>
 

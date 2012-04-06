@@ -51,20 +51,12 @@
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
-    <repository>
-      <id>m.j-c.o-artifacts</id>
-      <url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
-    </repository>
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>m.j-c.o-artifacts</id>
-      <url>http://maven.jenkins-ci.org/content/groups/artifacts/</url>
     </pluginRepository>
   </pluginRepositories>
 

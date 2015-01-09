@@ -46,10 +46,18 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * @author Sam Tavakoli
  */
 public class ExclusiveBuildWrapper extends BuildWrapper {
+	
+	private boolean skipWait;
 
     @DataBoundConstructor
-    public ExclusiveBuildWrapper(boolean enabled) {
+    public ExclusiveBuildWrapper(boolean enabled, boolean skipWait) {
         super();
+        this.skipWait = skipWait;
+    }
+    
+    public boolean isSkipWait()
+    {
+    	return skipWait;
     }
 
     @Override
@@ -57,22 +65,39 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
                                                                               throws InterruptedException{
         String nodeName = Computer.currentComputer().getDisplayName();
         
-        DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_executingOn() + nodeName);
+        DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_executingOn() + " " + nodeName);
         DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_shutdownMessage());
         
         try {
             Jenkins.getInstance().doQuietDown();
         } catch (IOException e) {
-            DebugHelper.fatalError(listener, Messages.ExclusiveBuildWrapper_errorQuietMode() + 
+            DebugHelper.fatalError(listener, Messages.ExclusiveBuildWrapper_errorQuietMode() + " " + 
                                                                                           e.getMessage());
             e.printStackTrace(listener.getLogger());
         }
 
-        while (areComputersIdle(nodeName, Jenkins.getInstance().getComputers()) == false) {
-            Thread.sleep(500);
+        if(skipWait)
+        {
+        	DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_waitSkipped());
         }
-        
-        DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_onlyJobRunning());
+        else
+        {
+        	DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_waiting());
+	        while (areComputersIdle(nodeName, Jenkins.getInstance().getComputers()) == false) {
+	        	try
+	        	{
+	        		Thread.sleep(500);
+	        	}
+	        	catch(InterruptedException e) {
+	        		// Gracefully cancel shutdown if job is canceled in pre-build phase
+	        		cancelShutdown(listener);
+	        		throw e;
+	        	}
+	        }
+	        
+        	DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_onlyJobRunning());
+        }
+        	
         return new ExclusiveEnvironment(listener);
     }
     
@@ -113,6 +138,12 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
         }
     }
     
+    private void cancelShutdown(BuildListener listener)
+    {
+        DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_cancelShutDownMode());
+        Jenkins.getInstance().doCancelQuietDown();
+    }
+    
     /**
      * handles the post-build tasks such as canceling the quiet down sequencing 
      * 
@@ -126,10 +157,9 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
 
         @Override
         public boolean tearDown(AbstractBuild build, BuildListener listener) {
-            DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_cancelShutDownMode());
-            Jenkins.getInstance().doCancelQuietDown();
-            
+        	cancelShutdown(listener);
             return true;
         }
     }
+    
 }

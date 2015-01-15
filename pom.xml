@@ -37,6 +37,11 @@
       <name>Sam Tavakoli</name>
       <email>sam@tavakoli.se</email>
     </developer>
+    <developer>
+      <id>fmiguelez</id>
+      <name>Fernando Miguélez Palomo</name>
+      <email>fernando.miguelez@gmail.com</email>
+    </developer>
   </developers>
 
   <scm>

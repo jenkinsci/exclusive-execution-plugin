@@ -1,6 +1,6 @@
-Set this flag to execute this job when you want no other jobs to run.<br />
+Set this flag to prevent other jobs from starting once this job has started.<br />
 <br />
-Jenkins is put in shutdown mode when this job is started. Then the real execution of this job starts when this job is the only one running.<br/>
-Waiting can be skipped by setting flag <i>"Do not wait till running jobs end"</i>.<br/>
+Jenkins is put in shutdown mode when this job is started. Build steps are not actually executed until this job is the only one running,<br/>
+unless optional flag "Do not wait till running jobs end"</i> is enabled.<br/>
 <br />
 At the end of the build the Jenkins shutdown mode is canceled.

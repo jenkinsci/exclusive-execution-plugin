@@ -44,70 +44,65 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  * @author marco.ambu
  * @author Sam Tavakoli
+ * @author Fernando Miguélez Palomo
  */
 public class ExclusiveBuildWrapper extends BuildWrapper {
-	
-	private boolean skipWait;
+
+    private boolean skipWaitOnRunningJobs;
 
     @DataBoundConstructor
-    public ExclusiveBuildWrapper(boolean enabled, boolean skipWait) {
+    public ExclusiveBuildWrapper(boolean enabled, boolean skipWaitOnRunningJobs) {
         super();
-        this.skipWait = skipWait;
+        this.skipWaitOnRunningJobs = skipWaitOnRunningJobs;
     }
-    
-    public boolean isSkipWait()
-    {
-    	return skipWait;
+
+    public boolean isSkipWaitOnRunningJobs() {
+        return skipWaitOnRunningJobs;
     }
 
     @Override
-    public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) 
-                                                                              throws InterruptedException{
+    public BuildWrapper.Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener)
+            throws InterruptedException {
         String nodeName = Computer.currentComputer().getDisplayName();
-        
+
         DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_executingOn() + " " + nodeName);
         DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_shutdownMessage());
-        
+
         try {
             Jenkins.getInstance().doQuietDown();
         } catch (IOException e) {
-            DebugHelper.fatalError(listener, Messages.ExclusiveBuildWrapper_errorQuietMode() + " " + 
-                                                                                          e.getMessage());
+            DebugHelper.fatalError(listener, Messages.ExclusiveBuildWrapper_errorQuietMode() + " "
+                    + e.getMessage());
             e.printStackTrace(listener.getLogger());
         }
 
-        if(skipWait)
-        {
-        	DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_waitSkipped());
+        if (skipWaitOnRunningJobs) {
+            DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_waitSkipped());
+        } else {
+            DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_waiting());
+            while (areComputersIdle(nodeName, Jenkins.getInstance().getComputers()) == false) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    //Gracefully cancel shutdown if job is canceled in pre-build phase
+                    cancelShutdown(listener);
+                    throw e;
+                }
+            }
+
+            DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_onlyJobRunning());
         }
-        else
-        {
-        	DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_waiting());
-	        while (areComputersIdle(nodeName, Jenkins.getInstance().getComputers()) == false) {
-	        	try
-	        	{
-	        		Thread.sleep(500);
-	        	}
-	        	catch(InterruptedException e) {
-	        		// Gracefully cancel shutdown if job is canceled in pre-build phase
-	        		cancelShutdown(listener);
-	        		throw e;
-	        	}
-	        }
-	        
-        	DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_onlyJobRunning());
-        }
-        	
+
         return new ExclusiveEnvironment(listener);
     }
-    
+
     /**
      * @param nodeName the name of the node where this job is running from
      * @param computers all computers who has executors available
-     * @return true if this job is the only one being executed on this node and all other nodes
-     *              are idle. false otherwise
+     * @return true if this job is the only one being executed on this node and
+     *         all other nodes are idle. false otherwise
      */
-    private boolean areComputersIdle(String nodeName, Computer[] computers){
+    private boolean areComputersIdle(String nodeName, Computer[] computers) {
         for (Computer computer : computers) {
             //any other computer than the one the job is executed on should be idle
             if (computer.getDisplayName().equals(nodeName) == false && computer.isIdle() == false) {
@@ -122,8 +117,8 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
     }
 
     /**
-     * Descriptor for {@link ExclusiveBuildWrapper}. Used as a singleton.
-     * The class is marked as public so that it can be accessed from views.
+     * Descriptor for {@link ExclusiveBuildWrapper}. Used as a singleton. The
+     * class is marked as public so that it can be accessed from views.
      */
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
@@ -137,15 +132,19 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
             return true;
         }
     }
-    
-    private void cancelShutdown(BuildListener listener)
-    {
+
+    /**
+     * Cancels Jenkins shutdown mode
+     * 
+     * @param listener the listener to get the logger from
+     */
+    private void cancelShutdown(BuildListener listener) {
         DebugHelper.info(listener, Messages.ExclusiveBuildWrapper_cancelShutDownMode());
         Jenkins.getInstance().doCancelQuietDown();
     }
-    
+
     /**
-     * handles the post-build tasks such as canceling the quiet down sequencing 
+     * handles the post-build tasks such as canceling the quiet down sequencing
      * 
      */
     private class ExclusiveEnvironment extends Environment {
@@ -157,9 +156,9 @@ public class ExclusiveBuildWrapper extends BuildWrapper {
 
         @Override
         public boolean tearDown(AbstractBuild build, BuildListener listener) {
-        	cancelShutdown(listener);
+            cancelShutdown(listener);
             return true;
         }
     }
-    
+
 }

@@ -1,3 +1,3 @@
 <div>
-  This plugin allows to execute a job when no other jobs are allowed to run.
-  </div>
+  This plugin allows configuring a job to prevent the rest from starting its execution while this is running.
+</div>

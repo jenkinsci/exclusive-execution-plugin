@@ -7,7 +7,7 @@
   </parent>
 
   <artifactId>exclusive-execution</artifactId>
-  <version>0.8</version>
+  <version>0.8-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins Exclusive Execution Plugin</name>
   <description>This plugin allows for the execution of a job when no other jobs are running.</description>
